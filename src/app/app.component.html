@@ -1,0 +1,25 @@
+<div class="app-shell">
+  <nav class="top-nav">
+    <div class="nav-links">
+      <a
+        [routerLink]="['/dashboard']"
+        routerLinkActive="active"
+        class="nav-item"
+        >Dashboard</a
+      >
+      <a [routerLink]="['/members']" routerLinkActive="active" class="nav-item"
+        >Member</a
+      >
+      <a [routerLink]="['/trainers']" routerLinkActive="active" class="nav-item"
+        >Trainer</a
+      >
+      <a [routerLink]="['/classes']" routerLinkActive="active" class="nav-item"
+        >Classes</a
+      >
+    </div>
+  </nav>
+
+  <main class="main-content">
+    <router-outlet></router-outlet>
+  </main>
+</div>
