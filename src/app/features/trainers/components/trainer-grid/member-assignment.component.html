@@ -1,0 +1,32 @@
+<div class="container">
+  <h1>Assign Members to Trainer</h1>
+
+  <div class="assignment-wrapper">
+    <!-- Assigned Members -->
+    <section>
+      <h2>Assigned Members</h2>
+      <div *ngFor="let member of assignedMembers" class="member-card assigned">
+        <div class="info">
+          <strong>{{ member.name }}</strong>
+          <p>
+            Goal: {{ member.goal }} | Rating:
+            {{ member.trainerRating || "N/A" }}
+          </p>
+        </div>
+        <button (click)="toggleAssignment(member, false)">Remove</button>
+      </div>
+    </section>
+
+    <!-- Available Members -->
+    <section>
+      <h2>Available Members</h2>
+      <div *ngFor="let member of availableMembers" class="member-card">
+        <div class="info">
+          <strong>{{ member.name }}</strong>
+          <p>Goal: {{ member.goal }}</p>
+        </div>
+        <button (click)="toggleAssignment(member, true)">Assign</button>
+      </div>
+    </section>
+  </div>
+</div>

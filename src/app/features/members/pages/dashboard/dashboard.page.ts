@@ -1,83 +1,126 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import {
+  GridsterConfig,
+  GridsterItem,
+  GridsterModule,
+} from 'angular-gridster2';
+
+interface DashboardItem extends GridsterItem {
+  id: string;
+  title: string;
+}
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, GridsterModule],
+  // 1. Give the main container a fixed or percentage height
   template: `
     <div
-      style="padding: 24px; font-family: sans-serif; color: #333; max-width: 600px;"
+      style="padding: 20px; background: #f0f2f5; height: 100vh; overflow-y: auto;"
     >
-      <!-- Header with Minimalistic Coming Soon Badge -->
-      <div
-        style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;"
-      >
-        <h2 style="margin: 0; font-size: 1.5rem; font-weight: 600;">
-          Dashboard
-        </h2>
-        <span
-          style="
-          background-color: #f3f4f6; 
-          color: #6b7280; 
-          font-size: 0.75rem; 
-          font-weight: 500; 
-          padding: 4px 8px; 
-          border-radius: 12px;
-          border: 1px solid #e5e7eb;
-          letter-spacing: 0.05em;
-          text-transform: uppercase;
-        "
+      <div style="margin-bottom: 20px;">
+        <button
+          (click)="toggleEdit()"
+          style="padding: 10px 20px; cursor: pointer;"
         >
-          Coming Soon
-        </span>
+          {{
+            options.draggable?.enabled
+              ? 'Lock Dashboard'
+              : 'Customize Dashboard'
+          }}
+        </button>
       </div>
 
-      <p
-        style="color: #6b7280; font-size: 0.9rem; margin-bottom: 24px; line-height: 1.5;"
-      >
-        Your central overview for business performance, metrics, and active
-        insights is currently under construction.
-      </p>
-
-      <!-- Minimal Dashboard Grid Placeholders -->
-      <div
-        style="
-        display: grid; 
-        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); 
-        gap: 16px;
-      "
-      >
-        @for (metric of mockMetrics; track metric.label) {
-        <div
-          style="
-            padding: 16px; 
-            border: 1px solid #e5e7eb; 
-            border-radius: 8px; 
-            background: #fafafa;
-          "
+      <gridster [options]="options" style="background: transparent;">
+        <gridster-item
+          *ngFor="let item of dashboard"
+          [item]="item"
+          style="background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); padding: 15px; border: 1px solid #ddd;"
         >
-          <span
-            style="display: block; font-size: 0.8rem; color: #9ca3af; margin-bottom: 4px; font-weight: 500;"
-          >
-            {{ metric.label }}
-          </span>
-          <span
-            style="display: block; font-size: 1.25rem; font-weight: 600; color: #d1d5db;"
-          >
-            {{ metric.placeholder }}
-          </span>
-        </div>
-        }
-      </div>
+          <div style="font-weight: bold; color: #666; margin-bottom: 10px;">
+            {{ item.title }}
+          </div>
+          <div style="font-size: 2rem; font-weight: bold; color: #333;">
+            {{ getMockData(item.id) }}
+          </div>
+        </gridster-item>
+      </gridster>
     </div>
   `,
 })
 export class DashboardPage {
-  // Simple mock structure to build out the grid blocks beautifully
-  mockMetrics = [
-    { label: 'TOTAL MEMBERS', placeholder: '--' },
-    { label: 'ACTIVE TRAINERS', placeholder: '--' },
-    { label: 'MONTHLY REVENUE', placeholder: '$ --' },
-  ];
+  options: GridsterConfig = {
+    gridType: 'fit',
+    displayGrid: 'none', // Initial state
+    pushItems: true,
+    draggable: {
+      enabled: true, // Keep enabled, just toggle it in your button
+    },
+    resizable: {
+      enabled: true,
+    },
+    margin: 15,
+    outerMargin: true,
+    fixedColWidth: 200,
+    fixedRowHeight: 150,
+    minCols: 6,
+    minRows: 6,
+  };
+
+  changedOptions() {
+    if (this.options.api && this.options.api.optionsChanged) {
+      this.options.api.optionsChanged();
+    }
+  }
+
+  dashboard: DashboardItem[] = Array.from({ length: 10 }, (_, i) => ({
+    id: (i + 1).toString(),
+    cols: i < 2 ? 2 : 1, // First two are wider
+    rows: i < 2 ? 1 : 1,
+    y: 0,
+    x: (i * 2) % 6,
+    title: [
+      'Active Members',
+      'Revenue',
+      'Overweight',
+      'Normal',
+      'Underweight',
+      'Attendance',
+      'Expired',
+      'Due Soon',
+      'New Joiners',
+      'Inactive',
+    ][i],
+  }));
+
+  toggleEdit() {
+    // Toggle the boolean state
+    const isEnabled = !this.options.draggable!.enabled;
+
+    this.options.draggable!.enabled = isEnabled;
+    this.options.resizable!.enabled = isEnabled;
+
+    // Set the grid visibility based on whether edit mode is active
+    this.options.displayGrid = isEnabled ? 'always' : 'none';
+
+    this.changedOptions();
+  }
+
+  getMockData(id: string): string {
+    const values = [
+      '1,240',
+      '$45,200',
+      '12',
+      '45',
+      '8',
+      '88%',
+      '34',
+      '12',
+      '5',
+      '102',
+    ];
+    return values[parseInt(id) - 1] || '--';
+  }
 }

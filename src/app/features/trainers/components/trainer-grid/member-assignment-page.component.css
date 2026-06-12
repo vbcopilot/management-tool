@@ -1,0 +1,86 @@
+/* Main container for the assignment page */
+.assignment-container {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+
+  h1 {
+    margin-bottom: 24px;
+    color: #333;
+  }
+}
+
+/* Two-column layout */
+.assignment-wrapper {
+  display: flex;
+  gap: 32px;
+  align-items: flex-start;
+
+  section {
+    flex: 1;
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+    min-height: 500px;
+  }
+}
+
+/* Individual Member Cards */
+.member-card {
+  background: white;
+  padding: 16px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .info strong {
+    display: block;
+    font-size: 1.1em;
+    color: #2d3436;
+  }
+  .info p {
+    margin: 4px 0 0;
+    font-size: 0.9em;
+    color: #636e72;
+  }
+
+  /* Buttons */
+  button {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+  }
+}
+
+/* Assigned (Green indicator) */
+.member-card.assigned {
+  border-left: 6px solid #27ae60;
+  .assign-btn {
+    background-color: #dff9fb;
+    color: #0984e3;
+  }
+  .remove-btn {
+    background-color: #fff1f0;
+    color: #ff4d4f;
+  }
+}
+
+/* Available (Neutral indicator) */
+.member-card.available {
+  border-left: 6px solid #ced6e0;
+  .assign-btn {
+    background-color: #e3f2fd;
+    color: #1976d2;
+  }
+}

@@ -10,8 +10,6 @@ import { MemberFacadeService } from '../../services/member-facade.service';
   template: `
     <div class="page-container">
       <header class="page-header">
-        <h2 class="page-title">Member List</h2>
-
         <button class="add-btn" (click)="createMember()">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -37,20 +35,29 @@ import { MemberFacadeService } from '../../services/member-facade.service';
   `,
   styles: [
     `
+      :host {
+        display: block;
+        height: 100%;
+        box-sizing: border-box;
+      }
+
       .page-container {
-        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        padding: 0;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
           Helvetica, Arial, sans-serif;
       }
 
-      /* Flex layout pushes the heading to the left and button to the far right */
       .page-header {
         display: flex;
-        justify-content: space-between;
+        justify-content: right;
         align-items: center;
-        margin-bottom: 20px;
+        margin: 20px;
         border-bottom: 1px solid #eaeaea;
         padding-bottom: 12px;
+        flex-shrink: 0; /* Ensures header doesn't shrink when content overflows */
       }
 
       .page-title {
@@ -60,7 +67,13 @@ import { MemberFacadeService } from '../../services/member-facade.service';
         color: #333;
       }
 
-      /* Professional, minimalist button matching the tick icon color (#054A91) */
+      .grid-content {
+        flex: 1;
+        min-height: 0; /* Crucial for internal scrollbars in flex containers */
+        overflow-y: auto;
+        width: 100%;
+      }
+
       .add-btn {
         display: inline-flex;
         align-items: center;
@@ -78,20 +91,16 @@ import { MemberFacadeService } from '../../services/member-facade.service';
       }
 
       .add-btn:hover {
-        background-color: #043970; /* Slightly darker shade on hover */
+        background-color: #043970;
       }
 
       .add-btn:active {
-        transform: scale(0.98); /* Tactile press feedback */
+        transform: scale(0.98);
       }
 
       .btn-icon {
         width: 16px;
         height: 16px;
-      }
-
-      .grid-content {
-        width: 100%;
       }
     `,
   ],
