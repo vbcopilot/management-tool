@@ -9,10 +9,10 @@ import { Router } from '@angular/router';
   template: ` <div style="display: flex; align-items: center; height: 100%;">
     <a
       href="javascript:void(0)"
-      (click)="goToAssignment($event)"
+      (click)="goToAssignment()"
       style="color: #1976d2; text-decoration: underline; cursor: pointer; pointer-events: auto;"
     >
-      {{ 1000 }}
+      {{ params.value }}
     </a>
   </div>`,
 })
@@ -30,8 +30,7 @@ export class LinkRendererComponent implements ICellRendererAngularComp {
     return true;
   }
 
-  goToAssignment(event: Event) {
-    event.stopPropagation(); // Prevents AG Grid from intercepting
+  goToAssignment() {
     const trainerId = this.params.data.id;
     this.router.navigate(['/trainers/assign-members', trainerId]);
   }

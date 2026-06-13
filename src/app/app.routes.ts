@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { MemberAssignmentPageComponent } from './features/trainers/components/trainer-grid/member-assignment-page.component';
+import { AssignMembersComponent } from './features/trainers/components/trainer-grid/member-assignment-page.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'trainers', pathMatch: 'full' },
@@ -33,6 +33,6 @@ export const routes: Routes = [
   },
   {
     path: 'trainers/assign-members/:id',
-    component: MemberAssignmentPageComponent,
+    component: AssignMembersComponent,
   },
 ];

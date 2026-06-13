@@ -30,9 +30,21 @@ export class TrainerGridColumns {
       // --- TEXT FIELDS ---
       { field: 'name', headerName: 'Name', editable: true },
       {
-        field: 'specialization',
-        headerName: 'Speciality',
+        field: 'speaciality',
+        headerName: 'Speaciality',
         editable: true,
+        cellEditor: 'agSelectCellEditor',
+        cellEditorParams: {
+          values: [
+            'Cardio',
+            'Yoga',
+            'Weight Loss',
+            'Strength',
+            'Body Building',
+            'Asthetics',
+            'Other',
+          ],
+        },
       },
       { field: 'phoneNumber', headerName: 'Phone No', editable: true },
       { field: 'email', headerName: 'Email', editable: true },

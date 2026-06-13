@@ -13,6 +13,8 @@ export class AppDb extends Dexie {
       members: '++id, name, age, weight, height',
       trainers:
         '++id, name, specialization,phoneNumber,email,dateOfJoining,status,membersAssigned,averageRating,classesCompleted,Dues',
+      memberAssignments:
+        '++id, memberId,memberName, trainerId, isAssigned, memberGoal,memberRating,memberNotes,trainerNotes',
     });
   }
 }
