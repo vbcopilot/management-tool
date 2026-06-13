@@ -1,0 +1,217 @@
+<div class="td-wrap">
+  <!-- Toolbar -->
+  <div class="td-toolbar">
+    <div class="td-toolbar-left">
+      <span class="td-title">Payment History</span>
+      <span class="td-subtitle" *ngIf="trainerName">— {{ trainerName }}</span>
+    </div>
+    <div class="td-toolbar-actions">
+      <button class="td-btn-add" (click)="addPayment()">+ Add Payment</button>
+      <button class="td-btn-cancel" (click)="onCancel()">Cancel</button>
+      <button
+        class="td-btn-save"
+        (click)="onSave()"
+        [disabled]="!hasChanges || isSaving"
+      >
+        {{ isSaving ? "Saving…" : "Save changes" }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Summary strip -->
+  <div class="td-summary" *ngIf="!isLoading">
+    <div class="td-summary-item">
+      <span class="td-summary-label">Total Paid</span>
+      <span class="td-summary-val td-summary-val--paid"
+        >₹{{ totalPaid | number }}</span
+      >
+    </div>
+    <div class="td-summary-divider"></div>
+    <div class="td-summary-item">
+      <span class="td-summary-label">Pending</span>
+      <span class="td-summary-val td-summary-val--pending"
+        >₹{{ totalPending | number }}</span
+      >
+    </div>
+    <div class="td-summary-divider"></div>
+    <div class="td-summary-item">
+      <span class="td-summary-label">Advance</span>
+      <span class="td-summary-val td-summary-val--advance"
+        >₹{{ totalAdvance | number }}</span
+      >
+    </div>
+    <div class="td-summary-divider"></div>
+    <div class="td-summary-item">
+      <span class="td-summary-label">Entries</span>
+      <span class="td-summary-val">{{ payments.length }}</span>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="td-empty">Loading payment history…</div>
+
+  <!-- Table -->
+  <table class="td-table" *ngIf="!isLoading">
+    <thead>
+      <tr>
+        <th>Payment Date</th>
+        <th>Amount (₹)</th>
+        <th>Mode</th>
+        <th>Sessions</th>
+        <th>Bonus (₹)</th>
+        <th>Deduction (₹)</th>
+        <th class="col-net">Net Amount (₹)</th>
+        <th>Status</th>
+        <th>Trainer Notes</th>
+        <th>Admin Notes</th>
+        <th class="col-actions"></th>
+      </tr>
+    </thead>
+    <tbody>
+      <ng-container *ngFor="let p of payments">
+        <!-- Read row -->
+        <tr class="td-row" *ngIf="!isEditing(p)">
+          <td class="col-date">{{ p.paymentDate }}</td>
+          <td class="col-num">{{ p.amount | number }}</td>
+          <td class="col-meta">{{ p.paymentMode }}</td>
+          <td class="col-num">{{ p.sessionsCount ?? "—" }}</td>
+          <td class="col-num col-bonus">{{ p.bonus | number }}</td>
+          <td class="col-num col-deduction">{{ p.deduction | number }}</td>
+          <td class="col-num col-net">
+            <strong>{{ p.netAmount | number }}</strong>
+          </td>
+          <td>
+            <span class="td-tag" [ngClass]="statusClass(p.status)">{{
+              p.status
+            }}</span>
+          </td>
+          <td class="col-notes col-meta">{{ p.trainerNotes || "—" }}</td>
+          <td class="col-notes col-meta">{{ p.adminNotes || "—" }}</td>
+          <td class="col-actions">
+            <button class="td-btn-row" (click)="editRow(p)">Edit</button>
+            <button class="td-btn-row td-btn-del" (click)="deleteRow(p)">
+              Delete
+            </button>
+          </td>
+        </tr>
+
+        <!-- Edit row -->
+        <tr class="td-row td-row--editing" *ngIf="isEditing(p)">
+          <td>
+            <input
+              class="td-input"
+              type="date"
+              [(ngModel)]="p.paymentDate"
+              (ngModelChange)="hasChanges = true"
+            />
+          </td>
+          <td>
+            <input
+              class="td-input td-input--num"
+              type="number"
+              min="0"
+              [(ngModel)]="p.amount"
+              (ngModelChange)="recompute(p)"
+            />
+          </td>
+          <td>
+            <select
+              class="td-select"
+              [(ngModel)]="p.paymentMode"
+              (ngModelChange)="hasChanges = true"
+            >
+              <option *ngFor="let m of paymentModes" [value]="m">
+                {{ m }}
+              </option>
+            </select>
+          </td>
+          <td>
+            <input
+              class="td-input td-input--num"
+              type="number"
+              min="0"
+              [(ngModel)]="p.sessionsCount"
+              (ngModelChange)="hasChanges = true"
+              placeholder="—"
+            />
+          </td>
+          <td>
+            <input
+              class="td-input td-input--num col-bonus"
+              type="number"
+              min="0"
+              [(ngModel)]="p.bonus"
+              (ngModelChange)="recompute(p)"
+            />
+          </td>
+          <td>
+            <input
+              class="td-input td-input--num col-deduction"
+              type="number"
+              min="0"
+              [(ngModel)]="p.deduction"
+              (ngModelChange)="recompute(p)"
+            />
+          </td>
+          <td class="col-net td-net-live">
+            <strong
+              >₹{{
+                (p.amount || 0) + (p.bonus || 0) - (p.deduction || 0) | number
+              }}</strong
+            >
+          </td>
+          <td>
+            <select
+              class="td-select"
+              [(ngModel)]="p.status"
+              (ngModelChange)="hasChanges = true"
+            >
+              <option *ngFor="let s of statuses" [value]="s">{{ s }}</option>
+            </select>
+          </td>
+          <td>
+            <textarea
+              class="td-textarea"
+              rows="2"
+              [(ngModel)]="p.trainerNotes"
+              (ngModelChange)="hasChanges = true"
+              placeholder="Trainer notes…"
+            ></textarea>
+          </td>
+          <td>
+            <textarea
+              class="td-textarea"
+              rows="2"
+              [(ngModel)]="p.adminNotes"
+              (ngModelChange)="hasChanges = true"
+              placeholder="Admin notes…"
+            ></textarea>
+          </td>
+          <td class="col-actions">
+            <button class="td-btn-row td-btn-done" (click)="doneRow(p)">
+              Done
+            </button>
+            <button class="td-btn-row td-btn-del" (click)="deleteRow(p)">
+              Delete
+            </button>
+          </td>
+        </tr>
+      </ng-container>
+
+      <!-- Empty state -->
+      <tr *ngIf="payments.length === 0">
+        <td colspan="11" class="td-empty">
+          No payment records yet. Click "+ Add Payment" to start.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Footer -->
+  <div class="td-footer">
+    <span *ngIf="hasChanges" class="td-footer-note td-footer-note--changed">
+      <span class="td-dot"></span> Unsaved changes
+    </span>
+    <span *ngIf="!hasChanges" class="td-footer-note">No pending changes</span>
+  </div>
+</div>

@@ -5,12 +5,15 @@
       <span class="am-title">Assign members to trainer</span>
       <span class="am-badge">{{ assignedCount }} assigned</span>
     </div>
-
-    <div class="am-toolbar-right">
-      <button class="am-btn-save" (click)="onSave()" [disabled]="!hasChanges">
-        Save changes
+    <div class="am-toolbar-actions">
+      <button class="am-btn-cancel" (click)="onCancel()">Cancel</button>
+      <button
+        class="am-btn-save"
+        (click)="onSave()"
+        [disabled]="!hasChanges || isSaving"
+      >
+        {{ isSaving ? "Saving…" : "Save changes" }}
       </button>
-      <button class="am-btn-save" (click)="onCancel()">Cancel</button>
     </div>
   </div>
 
@@ -18,79 +21,164 @@
   <input
     class="am-search"
     type="text"
-    placeholder="Search by name or goal…"
+    placeholder="Search by name…"
     [(ngModel)]="searchQuery"
   />
 
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="am-empty">Loading members…</div>
+
   <!-- Table -->
-  <table class="am-table">
+  <table class="am-table" *ngIf="!isLoading">
     <thead>
       <tr>
         <th class="col-check"></th>
         <th>Name</th>
         <th>Goal</th>
         <th>Rating</th>
+        <th>Member Notes</th>
+        <th>Trainer Notes</th>
         <th>Status</th>
+        <th class="col-edit"></th>
       </tr>
     </thead>
     <tbody>
-      <!-- Assigned section -->
-      <ng-container *ngIf="assignedMembers.length > 0">
+      <!-- ── Assigned ── -->
+      <ng-container *ngIf="assignedRows.length > 0">
         <tr class="am-section-row">
-          <td colspan="5">
+          <td colspan="8">
             <span class="am-section-label"
-              >Assigned ({{ assignedMembers.length }})</span
+              >Assigned ({{ assignedRows.length }})</span
             >
           </td>
         </tr>
-        <tr *ngFor="let member of assignedMembers" class="am-row">
-          <td class="col-check">
-            <input
-              type="checkbox"
-              [checked]="isChecked(member)"
-              (change)="onToggle(member, $any($event.target).checked)"
-            />
-          </td>
-          <td class="col-name">{{ member.name }}</td>
-          <td class="col-meta">{{ member.goal }}</td>
-          <td class="col-meta">
-            {{
-              member.trainerRating
-                ? (member.trainerRating | number : "1.1-1")
-                : "—"
-            }}
-          </td>
-          <td><span class="am-tag am-tag--assigned">Assigned</span></td>
-        </tr>
+
+        <ng-container *ngFor="let row of assignedRows">
+          <!-- Normal row -->
+          <tr class="am-row" *ngIf="!row.isEditing">
+            <td class="col-check">
+              <input
+                type="checkbox"
+                checked
+                (change)="onToggle(row, $any($event.target).checked)"
+              />
+            </td>
+            <td class="col-name">{{ row.name }}</td>
+            <td class="col-meta">{{ row.goal || "—" }}</td>
+            <td class="col-meta">
+              <span class="am-stars-readonly" *ngIf="row.ratingGiven">
+                <span
+                  *ngFor="let s of stars"
+                  [class.filled]="s <= (row.ratingGiven || 0)"
+                  >★</span
+                >
+                <span class="am-rating-val">{{ row.ratingGiven }}/10</span>
+              </span>
+              <span class="col-meta" *ngIf="!row.ratingGiven">—</span>
+            </td>
+            <td class="col-meta col-notes">{{ row.memberNotes || "—" }}</td>
+            <td class="col-meta col-notes">{{ row.trainerNotes || "—" }}</td>
+            <td><span class="am-tag am-tag--assigned">Assigned</span></td>
+            <td class="col-edit">
+              <button class="am-btn-edit" (click)="toggleEdit(row)">
+                Edit
+              </button>
+            </td>
+          </tr>
+
+          <!-- Expanded edit row -->
+          <tr class="am-row am-row--editing" *ngIf="row.isEditing">
+            <td class="col-check">
+              <input
+                type="checkbox"
+                checked
+                (change)="onToggle(row, $any($event.target).checked)"
+              />
+            </td>
+            <td class="col-name">{{ row.name }}</td>
+            <td>
+              <input
+                class="am-input"
+                type="text"
+                placeholder="Enter goal…"
+                [(ngModel)]="row.goal"
+                (ngModelChange)="onFieldChange()"
+              />
+            </td>
+            <td>
+              <div class="am-stars">
+                <span
+                  *ngFor="let s of stars"
+                  class="am-star"
+                  [class.filled]="s <= (row.ratingGiven || 0)"
+                  (click)="setRating(row, s)"
+                  >★</span
+                >
+                <span class="am-rating-val" *ngIf="row.ratingGiven"
+                  >{{ row.ratingGiven }}/10</span
+                >
+              </div>
+            </td>
+            <td>
+              <textarea
+                class="am-textarea"
+                placeholder="Member notes…"
+                [(ngModel)]="row.memberNotes"
+                (ngModelChange)="onFieldChange()"
+                rows="2"
+              ></textarea>
+            </td>
+            <td>
+              <textarea
+                class="am-textarea"
+                placeholder="Trainer notes…"
+                [(ngModel)]="row.trainerNotes"
+                (ngModelChange)="onFieldChange()"
+                rows="2"
+              ></textarea>
+            </td>
+            <td><span class="am-tag am-tag--assigned">Assigned</span></td>
+            <td class="col-edit">
+              <button class="am-btn-edit am-btn-done" (click)="toggleEdit(row)">
+                Done
+              </button>
+            </td>
+          </tr>
+        </ng-container>
       </ng-container>
 
-      <!-- Available section -->
-      <ng-container *ngIf="availableMembers.length > 0">
+      <!-- ── Available ── -->
+      <ng-container *ngIf="availableRows.length > 0">
         <tr class="am-section-row">
-          <td colspan="5">
+          <td colspan="8">
             <span class="am-section-label"
-              >Available ({{ availableMembers.length }})</span
+              >Available ({{ availableRows.length }})</span
             >
           </td>
         </tr>
-        <tr *ngFor="let member of availableMembers" class="am-row">
+        <tr *ngFor="let row of availableRows" class="am-row">
           <td class="col-check">
             <input
               type="checkbox"
-              [checked]="isChecked(member)"
-              (change)="onToggle(member, $any($event.target).checked)"
+              (change)="onToggle(row, $any($event.target).checked)"
             />
           </td>
-          <td class="col-name">{{ member.name }}</td>
-          <td class="col-meta">{{ member.goal }}</td>
-          <td class="col-meta">—</td>
+          <td class="col-name">{{ row.name }}</td>
+          <td class="col-meta" colspan="4">
+            Age {{ row.age }} · {{ row.weight }}kg · {{ row.height }}cm
+          </td>
           <td><span class="am-tag am-tag--available">Available</span></td>
+          <td class="col-edit"></td>
         </tr>
       </ng-container>
 
-      <!-- Empty state -->
-      <tr *ngIf="assignedMembers.length === 0 && availableMembers.length === 0">
-        <td colspan="5" class="am-empty">No members match your search</td>
+      <!-- Empty -->
+      <tr
+        *ngIf="
+          !isLoading && assignedRows.length === 0 && availableRows.length === 0
+        "
+      >
+        <td colspan="8" class="am-empty">No members found</td>
       </tr>
     </tbody>
   </table>
@@ -100,14 +188,6 @@
     <span *ngIf="hasChanges" class="am-footer-note am-footer-note--changed">
       <span class="am-dot"></span> Unsaved changes
     </span>
-    <span *ngIf="!hasChanges && !saveSuccess" class="am-footer-note">
-      No pending changes
-    </span>
-    <span
-      *ngIf="saveSuccess && !hasChanges"
-      class="am-footer-note am-footer-note--saved"
-    >
-      ✓ Changes saved
-    </span>
+    <span *ngIf="!hasChanges" class="am-footer-note">No pending changes</span>
   </div>
 </div>

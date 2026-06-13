@@ -1,15 +1,35 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MemberFacadeService } from '../../../members/services/member-facade.service';
+import { TrainerFacadeService } from '../../../members/services/trainer-facade.service';
+import { Member } from '../../../members/models/member.model';
 
-export interface Member {
+export interface AssignedMember {
   id: number;
   name: string;
   goal: string;
-  trainerRating?: number | null;
-  assigned: boolean;
+  ratingGiven: number | null;
+  memberNotes: string;
+  trainerNotes: string;
+  isAssigned: boolean;
+}
+
+interface MemberRow {
+  id: number;
+  name: string;
+  age: any;
+  weight: any;
+  height: any;
+  // assignment fields
+  isAssigned: boolean;
+  goal: string;
+  ratingGiven: number | null;
+  memberNotes: string;
+  trainerNotes: string;
+  // UI state
+  isEditing: boolean;
 }
 
 @Component({
@@ -20,153 +40,128 @@ export interface Member {
   styleUrls: ['./member-assignment-page.component.css'],
 })
 export class AssignMembersComponent implements OnInit {
-  @Input() members: Member[] = [
-    {
-      id: 1,
-      name: 'Anita Sharma',
-      goal: 'Weight loss',
-      trainerRating: 4.8,
-      assigned: true,
-    },
-    {
-      id: 2,
-      name: 'Rohan Verma',
-      goal: 'Muscle gain',
-      trainerRating: 4.5,
-      assigned: true,
-    },
-    {
-      id: 3,
-      name: 'Priya Nair',
-      goal: 'Flexibility',
-      trainerRating: 4.2,
-      assigned: true,
-    },
-    {
-      id: 4,
-      name: 'Karan Mehta',
-      goal: 'Endurance',
-      trainerRating: 3.9,
-      assigned: true,
-    },
-    {
-      id: 5,
-      name: 'Sneha Iyer',
-      goal: 'Weight loss',
-      trainerRating: null,
-      assigned: false,
-    },
-    {
-      id: 6,
-      name: 'Arjun Patel',
-      goal: 'Strength',
-      trainerRating: null,
-      assigned: false,
-    },
-    {
-      id: 7,
-      name: 'Divya Rao',
-      goal: 'Cardio fitness',
-      trainerRating: null,
-      assigned: false,
-    },
-    {
-      id: 8,
-      name: 'Vikram Singh',
-      goal: 'Muscle gain',
-      trainerRating: null,
-      assigned: false,
-    },
-    {
-      id: 9,
-      name: 'Meera Joshi',
-      goal: 'Flexibility',
-      trainerRating: null,
-      assigned: false,
-    },
-  ];
-
-  constructor(
-    private router: Router,
-    private memberfacade: MemberFacadeService
-  ) {}
+  trainerId!: number;
+  rows: MemberRow[] = [];
 
   searchQuery = '';
-  checkedIds = new Set<number>();
-  savedIds = new Set<number>();
   hasChanges = false;
-  saveSuccess = false;
+  isSaving = false;
+  isLoading = true;
 
-  ngOnInit(): void {
-    this.members
-      .filter((m) => m.assigned)
-      .forEach((m) => {
-        this.checkedIds.add(m.id);
-        this.savedIds.add(m.id);
-      });
-  }
+  readonly stars = Array.from({ length: 10 }, (_, i) => i + 1);
 
-  // async ngOnInit(): Promise<void> {
-  //   this.memberfacade.members$.subscribe((members) => {
-  //     this.members = members;
-  //   });
+  constructor(
+    private readonly route: ActivatedRoute,
+    private readonly router: Router,
+    private readonly memberFacade: MemberFacadeService,
+    private readonly trainerFacade: TrainerFacadeService
+  ) {}
 
-  //   await this.memberfacade.loadMembers();
-  // }
+  async ngOnInit(): Promise<void> {
+    this.trainerId = Number(this.route.snapshot.paramMap.get('id'));
 
-  async fetchMembers() {
-    return await this.memberfacade.loadMembers();
-  }
-
-  get filteredMembers(): Member[] {
-    const q = this.searchQuery.toLowerCase();
-    if (!q) return this.members;
-    return this.members.filter(
-      (m) =>
-        m.name.toLowerCase().includes(q) || m.goal.toLowerCase().includes(q)
+    const trainer = await this.trainerFacade.getTrainerById(this.trainerId);
+    const assignedMap = new Map<number, AssignedMember>(
+      (trainer?.membersAssigned ?? []).map((m: AssignedMember) => [
+        Number(m.id),
+        m,
+      ])
     );
+
+    await this.memberFacade.loadMembers();
+
+    this.memberFacade.members$.subscribe((members: Member[]) => {
+      this.rows = members.map((m) => {
+        const existing = assignedMap.get(Number(m.id));
+        return {
+          id: Number(m.id),
+          name: m.name,
+          age: m.age,
+          weight: m.weight,
+          height: m.height,
+          isAssigned: existing?.isAssigned ?? false,
+          goal: existing?.goal ?? '',
+          ratingGiven: existing?.ratingGiven ?? null,
+          memberNotes: existing?.memberNotes ?? '',
+          trainerNotes: existing?.trainerNotes ?? '',
+          isEditing: false,
+        };
+      });
+      this.isLoading = false;
+    });
   }
 
-  get assignedMembers(): Member[] {
-    return this.filteredMembers.filter((m) => this.checkedIds.has(m.id));
+  // ── Filtering ──────────────────────────────────────────────────────────────
+
+  get filteredRows(): MemberRow[] {
+    const q = this.searchQuery.toLowerCase();
+    if (!q) return this.rows;
+    return this.rows.filter((r) => r.name.toLowerCase().includes(q));
   }
 
-  get availableMembers(): Member[] {
-    return this.filteredMembers.filter((m) => !this.checkedIds.has(m.id));
+  get assignedRows(): MemberRow[] {
+    return this.filteredRows.filter((r) => r.isAssigned);
+  }
+
+  get availableRows(): MemberRow[] {
+    return this.filteredRows.filter((r) => !r.isAssigned);
   }
 
   get assignedCount(): number {
-    return this.checkedIds.size;
+    return this.rows.filter((r) => r.isAssigned).length;
   }
 
-  isChecked(member: Member): boolean {
-    return this.checkedIds.has(member.id);
+  // ── Assignment toggle ──────────────────────────────────────────────────────
+
+  onToggle(row: MemberRow, checked: boolean): void {
+    row.isAssigned = checked;
+    if (!checked) row.isEditing = false;
+    this.hasChanges = true;
   }
 
-  onToggle(member: Member, checked: boolean): void {
-    if (checked) {
-      this.checkedIds.add(member.id);
-    } else {
-      this.checkedIds.delete(member.id);
+  // ── Inline edit ───────────────────────────────────────────────────────────
+
+  toggleEdit(row: MemberRow): void {
+    row.isEditing = !row.isEditing;
+  }
+
+  setRating(row: MemberRow, star: number): void {
+    row.ratingGiven = star;
+    this.hasChanges = true;
+  }
+
+  onFieldChange(): void {
+    this.hasChanges = true;
+  }
+
+  // ── Save / Cancel ─────────────────────────────────────────────────────────
+
+  async onSave(): Promise<void> {
+    if (!this.trainerId) return;
+    this.isSaving = true;
+
+    // All members are persisted (isAssigned flag tracks active/inactive).
+    // Ratings of unassigned members are still kept for average calculation.
+    const payload: AssignedMember[] = this.rows.map((r) => ({
+      id: r.id,
+      name: r.name,
+      goal: r.goal,
+      ratingGiven: r.ratingGiven,
+      memberNotes: r.memberNotes,
+      trainerNotes: r.trainerNotes,
+      isAssigned: r.isAssigned,
+    }));
+
+    try {
+      await this.trainerFacade.updateTrainerAssignment(this.trainerId, payload);
+      this.hasChanges = false;
+      this.rows.forEach((r) => (r.isEditing = false));
+    } catch (err) {
+      console.error('Failed to save assignment', err);
+    } finally {
+      this.isSaving = false;
     }
-    this.checkedIds = new Set(this.checkedIds); // trigger change detection
-    this.updateChangeState();
-  }
 
-  private updateChangeState(): void {
-    const same =
-      this.checkedIds.size === this.savedIds.size &&
-      [...this.checkedIds].every((id) => this.savedIds.has(id));
-    this.hasChanges = !same;
-    this.saveSuccess = false;
-  }
-
-  onSave(): void {
-    this.savedIds = new Set(this.checkedIds);
-    this.hasChanges = false;
-    this.saveSuccess = true;
-    // Emit or call your service here:
-    // this.assignmentService.save([...this.savedIds]);
     this.onCancel();
   }
 

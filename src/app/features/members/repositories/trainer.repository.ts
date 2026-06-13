@@ -14,12 +14,12 @@ export class TrainerRepository {
     return await db.trainers.get(id);
   }
 
-  create(member: Omit<Trainer, 'id'>): Promise<number> {
-    return db.trainers.add(member);
+  create(trainer: Omit<Trainer, 'id'>): Promise<number> {
+    return db.trainers.add(trainer);
   }
 
-  update(member: Trainer): Promise<number> {
-    return db.trainers.put(member);
+  update(trainer: Trainer): Promise<number> {
+    return db.trainers.put(trainer);
   }
 
   async deleteById(id: number): Promise<void> {

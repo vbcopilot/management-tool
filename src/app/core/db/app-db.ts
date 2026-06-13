@@ -11,10 +11,32 @@ export class AppDb extends Dexie {
 
     this.version(1).stores({
       members: '++id, name, age, weight, height',
-      trainers:
-        '++id, name, specialization,phoneNumber,email,dateOfJoining,status,membersAssigned,averageRating,classesCompleted,Dues',
-      memberAssignments:
-        '++id, memberId,memberName, trainerId, isAssigned, memberGoal,memberRating,memberNotes,trainerNotes',
+      trainers: '++id, name, specialization, status',
+    });
+
+    // ✅ on() runs AFTER tables are ready, and only when the DB is first created
+    this.on('populate', () => {
+      this.trainers.add({
+        name: 'John Doe',
+        specialization: 'Yoga',
+        status: 'Active',
+        membersAssigned: [
+          {
+            id: 101,
+            name: 'Alice',
+            ratingGiven: 5,
+            memberNotes: '',
+            trainerNotes: '',
+          },
+          {
+            id: 102,
+            name: 'Bob',
+            ratingGiven: 4,
+            memberNotes: '',
+            trainerNotes: '',
+          },
+        ],
+      });
     });
   }
 }

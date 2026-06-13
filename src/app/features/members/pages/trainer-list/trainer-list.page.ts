@@ -128,7 +128,7 @@ export class TrainerListPage implements OnInit {
       membersAssigned: null,
       averageRating: null,
       classesCompleted: null,
-      totalDues: null,
+      totalDuesPaid: null, // ← was totalDues
     };
 
     this.trainers = [newTrainer, ...this.trainers];
