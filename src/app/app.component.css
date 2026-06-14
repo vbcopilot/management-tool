@@ -1,4 +1,3 @@
-/* --- Global Resets --- */
 html,
 body {
   height: 100%;
@@ -65,7 +64,8 @@ body {
   flex-grow: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden; /* Contains the grid */
+  overflow-y: auto; /* ← was hidden */
+  min-height: 0;
 }
 
 /* --- AG Grid Customization --- */

@@ -1,0 +1,120 @@
+<div class="db-shell">
+  <!-- ── Topbar ──────────────────────────────────────────────────────────── -->
+  <div class="db-topbar">
+    <div class="db-topbar-left">
+      <span class="db-title">Dashboard</span>
+      <span class="db-pill" *ngIf="!isLoading">{{ grid.length }} widgets</span>
+    </div>
+    <div class="db-topbar-right">
+      <button class="db-btn db-btn--ghost" (click)="refreshData()">
+        ↻ Refresh
+      </button>
+
+      <ng-container *ngIf="isEditMode">
+        <button class="db-btn db-btn--green" (click)="toggleAddPanel()">
+          {{ showAddPanel ? "✕ Close" : "+ Add Widget" }}
+        </button>
+        <button class="db-btn db-btn--ghost" (click)="resetLayout()">
+          ↺ Reset
+        </button>
+      </ng-container>
+
+      <button
+        class="db-btn"
+        [class.db-btn--dark]="!isEditMode"
+        [class.db-btn--save]="isEditMode"
+        (click)="toggleEdit()"
+      >
+        {{ isEditMode ? "✓ Done" : "⊞ Customize" }}
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Edit banner ─────────────────────────────────────────────────────── -->
+  <div class="db-banner" *ngIf="isEditMode">
+    <span
+      >✏ Customize mode — drag ⠿ handle to move, resize from edges, × to
+      remove</span
+    >
+  </div>
+
+  <!-- ── Add widget drawer ───────────────────────────────────────────────── -->
+  <div class="db-drawer" *ngIf="showAddPanel && isEditMode">
+    <div class="db-drawer-cats">
+      <button
+        *ngFor="let cat of categories"
+        class="db-cat"
+        [class.db-cat--active]="activeCategory === cat"
+        (click)="activeCategory = cat"
+      >
+        {{ cat }}
+      </button>
+    </div>
+    <div class="db-drawer-items">
+      <div
+        *ngFor="let w of widgetsInCategory(activeCategory)"
+        class="db-wcard"
+        [class.db-wcard--used]="isOnDashboard(w.widgetId)"
+        (click)="!isOnDashboard(w.widgetId) && addWidget(w)"
+      >
+        <span class="db-wcard-icon db-icon--{{ w.type }}">
+          {{
+            w.type === "count"
+              ? "#"
+              : w.type === "pie"
+              ? "◑"
+              : w.type === "bar"
+              ? "▦"
+              : "∿"
+          }}
+        </span>
+        <div class="db-wcard-body">
+          <div class="db-wcard-name">{{ w.title }}</div>
+          <div class="db-wcard-desc">{{ w.description }}</div>
+        </div>
+        <span class="db-wcard-action">{{
+          isOnDashboard(w.widgetId) ? "✓" : "+"
+        }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Loading ─────────────────────────────────────────────────────────── -->
+  <div class="db-loading" *ngIf="isLoading">
+    <div class="db-spinner"></div>
+    <span>Loading dashboard…</span>
+  </div>
+
+  <!-- ── Grid ────────────────────────────────────────────────────────────── -->
+  <div class="db-grid-wrap" *ngIf="!isLoading">
+    <gridster [options]="options" class="db-grid">
+      <gridster-item
+        *ngFor="let item of grid; trackBy: trackByWidgetId"
+        [item]="item"
+        class="db-card"
+        [class.db-card--edit]="isEditMode"
+      >
+        <!-- Edit mode controls -->
+        <ng-container *ngIf="isEditMode">
+          <span class="db-drag-handle" title="Drag to move">⠿</span>
+          <button
+            class="db-remove"
+            (click)="removeWidget(item.widgetId, $event)"
+            title="Remove"
+          >
+            ×
+          </button>
+        </ng-container>
+
+        <!-- Widget content -->
+        <ng-container *ngIf="getDef(item.widgetId) as def">
+          <app-dashboard-widget
+            *ngIf="data"
+            [def]="def"
+            [data]="data"
+          ></app-dashboard-widget>
+        </ng-container>
+      </gridster-item>
+    </gridster>
+  </div>
+</div>

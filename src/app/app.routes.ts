@@ -1,6 +1,8 @@
 import { Routes } from '@angular/router';
 import { AssignMembersComponent } from './features/trainers/components/trainer-grid/member-assignment-page.component';
 import { TrainerDuesComponent } from './features/trainers/components/trainer-grid/trainer-dues.component';
+import { DashboardWidgetComponent } from './features/members/pages/dashboard/dashboard-widget.component';
+import { DashboardPage } from './features/members/pages/dashboard/dashboard.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'trainers', pathMatch: 'full' },
@@ -20,10 +22,7 @@ export const routes: Routes = [
   },
   {
     path: 'dashboard',
-    loadComponent: () =>
-      import('./features/members/pages/dashboard/dashboard.page').then(
-        (m) => m.DashboardPage
-      ),
+    component: DashboardPage,
   },
   {
     path: 'classes',
