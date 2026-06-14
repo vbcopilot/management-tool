@@ -3,6 +3,7 @@ import { AssignMembersComponent } from './features/trainers/components/trainer-g
 import { TrainerDuesComponent } from './features/trainers/components/trainer-grid/trainer-dues.component';
 import { DashboardWidgetComponent } from './features/members/pages/dashboard/dashboard-widget.component';
 import { DashboardPage } from './features/members/pages/dashboard/dashboard.component';
+import { LeadsBoardPage } from './features/leads/pages/lead-board.page';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'trainers', pathMatch: 'full' },
@@ -42,5 +43,9 @@ export const routes: Routes = [
   {
     path: 'trainers/:id/dues',
     component: TrainerDuesComponent,
+  },
+  {
+    path: 'leads',
+    component: LeadsBoardPage,
   },
 ];

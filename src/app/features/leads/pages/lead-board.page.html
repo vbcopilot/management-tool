@@ -1,0 +1,78 @@
+<div class="lb-shell">
+  <!-- ── Topbar ──────────────────────────────────────────────────────────── -->
+  <div class="lb-topbar">
+    <div class="lb-topbar-left">
+      <span class="lb-title">Leads</span>
+      <span class="lb-pill" *ngIf="!isLoading">{{ leads.length }} active</span>
+    </div>
+    <button class="lb-btn lb-btn--primary" (click)="showNewModal = true">
+      + New Lead
+    </button>
+  </div>
+
+  <!-- ── Loading ─────────────────────────────────────────────────────────── -->
+  <div class="lb-loading" *ngIf="isLoading">
+    <div class="lb-spinner"></div>
+    <span>Loading leads…</span>
+  </div>
+
+  <!-- ── Board ───────────────────────────────────────────────────────────── -->
+  <div class="lb-board" *ngIf="!isLoading">
+    <div class="lb-column" *ngFor="let stage of stages">
+      <div
+        class="lb-column-header"
+        [ngClass]="'lb-header--' + stageClass(stage)"
+      >
+        <span class="lb-column-title">{{ stage }}</span>
+        <span class="lb-column-count">{{ stageCount(stage) }}</span>
+      </div>
+
+      <div
+        class="lb-column-body"
+        [id]="dropListId(stage)"
+        cdkDropList
+        [cdkDropListData]="leadsByStage(stage)"
+        [cdkDropListConnectedTo]="connectedListsFor(stage)"
+        [cdkDropListEnterPredicate]="enterPredicate"
+        (cdkDropListDropped)="drop($event, stage)"
+      >
+        <app-lead-card
+          *ngFor="let lead of leadsByStage(stage); trackBy: trackByLeadId"
+          [lead]="lead"
+          cdkDrag
+          [cdkDragData]="lead"
+          (click)="openCard(lead)"
+        ></app-lead-card>
+
+        <div class="lb-empty" *ngIf="leadsByStage(stage).length === 0">
+          {{ stage === 'New' ? 'Click “+ New Lead” to add one' : 'Drop a lead
+          here' }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Toast ───────────────────────────────────────────────────────────── -->
+  <div class="lb-toast" *ngIf="toastMessage">{{ toastMessage }}</div>
+</div>
+
+<!-- ── Modals / Drawer ─────────────────────────────────────────────────────── -->
+<app-new-lead-modal
+  *ngIf="showNewModal"
+  (close)="showNewModal = false"
+  (created)="showNewModal = false"
+></app-new-lead-modal>
+
+<app-lead-detail-drawer
+  *ngIf="selectedLead"
+  [lead]="selectedLead"
+  (close)="closeDrawer()"
+  (moveRequested)="onMoveRequested($event)"
+></app-lead-detail-drawer>
+
+<app-lost-reason-modal
+  *ngIf="pendingLostMove"
+  [lead]="pendingLostMove.lead"
+  (confirm)="confirmLost($event)"
+  (cancel)="cancelLost()"
+></app-lost-reason-modal>
